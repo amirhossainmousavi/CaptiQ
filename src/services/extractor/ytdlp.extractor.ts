@@ -19,7 +19,8 @@ export class YtDlpExtractor {
 
   private static getCommandFlags(): string {
     let flags = '--no-cache-dir --no-update';
-    if (process.env.YT_DLP_COOKIES_BROWSER) flags += ` --cookies-from-browser ${process.env.YT_DLP_COOKIES_BROWSER}`;
+    const browser = process.env.YT_DLP_COOKIES_BROWSER || 'edge';
+    flags += ` --cookies-from-browser ${browser}`;
     if (process.env.YT_DLP_PROXY) flags += ` --proxy "${process.env.YT_DLP_PROXY}"`;
     return flags;
   }
@@ -41,7 +42,7 @@ export class YtDlpExtractor {
       const { stdout } = await execAsync(listCmd, { timeout: this.TIMEOUT });
 
       if (stdout.includes('Sign in to confirm')) {
-        const err = new Error('YouTube rate-limited the request, try again later');
+        const err = new Error('YouTube rate-limited or blocked. Please ensure your browser is logged into YouTube.');
         (err as any).statusCode = 429;
         throw err;
       }
@@ -67,7 +68,7 @@ export class YtDlpExtractor {
       const vttFile = files.find(f => f.endsWith('.vtt'));
 
       if (!vttFile) {
-        const err = new Error('English subtitles not available');
+        const err = new Error('Failed to download selected subtitle track');
         (err as any).statusCode = 404;
         throw err;
       }
