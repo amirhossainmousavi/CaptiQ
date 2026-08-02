@@ -10,16 +10,16 @@ Designed with scalability, performance, and maintainability in mind, CaptiQ supp
 
 ## ✨ Features
 
-| Feature | Description |
-|---|---|
+| Feature                          | Description                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------ |
 | 🎬 **Smart Subtitle Extraction** | Extracts YouTube subtitles using `yt-dlp` with an intelligent priority-based selection algorithm |
-| 🧠 **AI Processing** | Translate subtitles or generate summaries using modern LLM providers |
-| 🌍 **Multi Provider Support** | Supports OpenAI, Google Gemini, and OpenRouter |
-| ⚡ **High Performance** | Built-in caching and concurrency control to reduce unnecessary processing |
-| 🏗️ **Modular Architecture** | Provider-based design makes adding new AI models simple |
-| 🔒 **Request Optimization** | Prevents duplicate processing for the same YouTube video |
-| 📦 **Type Safe** | Fully written in TypeScript |
-| 🔌 **REST API** | Clean, predictable JSON-based API responses |
+| 🧠 **AI Processing**             | Translate subtitles or generate summaries using modern LLM providers                             |
+| 🌍 **Multi Provider Support**    | Supports OpenAI, Google Gemini, and OpenRouter                                                   |
+| ⚡ **High Performance**          | Built-in caching and concurrency control to reduce unnecessary processing                        |
+| 🏗️ **Modular Architecture**      | Provider-based design makes adding new AI models simple                                          |
+| 🔒 **Request Optimization**      | Prevents duplicate processing for the same YouTube video                                         |
+| 📦 **Type Safe**                 | Fully written in TypeScript                                                                      |
+| 🔌 **REST API**                  | Clean, predictable JSON-based API responses                                                      |
 
 ---
 
@@ -70,16 +70,16 @@ AI Summary
 
 # 🛠️ Tech Stack
 
-| Technology | Purpose |
-|---|---|
-| Node.js | Backend runtime |
-| TypeScript | Type-safe development |
-| Express.js | REST API framework |
-| yt-dlp | YouTube subtitle extraction |
-| OpenAI API | AI translation & summarization |
-| Google Gemini | Alternative AI provider |
-| OpenRouter | Multi-model AI access |
-| File System Cache | Performance optimization |
+| Technology        | Purpose                        |
+| ----------------- | ------------------------------ |
+| Node.js           | Backend runtime                |
+| TypeScript        | Type-safe development          |
+| Express.js        | REST API framework             |
+| yt-dlp            | YouTube subtitle extraction    |
+| OpenAI API        | AI translation & summarization |
+| Google Gemini     | Alternative AI provider        |
+| OpenRouter        | Multi-model AI access          |
+| File System Cache | Performance optimization       |
 
 ---
 
@@ -87,11 +87,11 @@ AI Summary
 
 Before running CaptiQ, make sure you have:
 
-| Requirement | Version |
-|---|---|
-| Node.js | `20.x` or higher |
-| npm | Latest version |
-| yt-dlp | Installed and available in PATH |
+| Requirement | Version                         |
+| ----------- | ------------------------------- |
+| Node.js     | `20.x` or higher                |
+| npm         | Latest version                  |
+| yt-dlp      | Installed and available in PATH |
 
 ---
 
@@ -133,13 +133,13 @@ npm run dev
 
 `.env`
 
-| Variable | Description | Example |
-|---|---|---|
-| `AI_PROVIDER` | Active AI provider | `openai` |
-| `AI_API_KEY` | Provider API key | `your_api_key` |
-| `AI_MODEL` | Selected AI model | `gpt-4o-mini` |
-| `YT_DLP_PATH` | yt-dlp executable path | `/usr/local/bin/yt-dlp` |
-| `CACHE_TTL_HOURS` | Cache expiration duration | `24` |
+| Variable          | Description               | Example                 |
+| ----------------- | ------------------------- | ----------------------- |
+| `AI_PROVIDER`     | Active AI provider        | `openai`                |
+| `AI_API_KEY`      | Provider API key          | `your_api_key`          |
+| `AI_MODEL`        | Selected AI model         | `gpt-4o-mini`           |
+| `YT_DLP_PATH`     | yt-dlp executable path    | `/usr/local/bin/yt-dlp` |
+| `CACHE_TTL_HOURS` | Cache expiration duration | `24`                    |
 
 Supported providers:
 
@@ -148,6 +148,15 @@ openai
 google
 openrouter
 ```
+
+# 🔒 Proxy & Cookies (Optional)
+
+To prevent YouTube from blocking your IP or detecting bot activity, you can configure one or both of these options:
+
+1. **Proxy**: Set `YT_DLP_PROXY` in your `.env` file (e.g., `http://user:pass@host:port`). The system will try using the proxy first.
+2. **Cookies**: Export your YouTube cookies using a browser extension (like "Get cookies.txt LOCALLY") as a `cookies.txt` file and place it in the project root. Set `YT_DLP_COOKIES_FILE=./cookies.txt` in your `.env`.
+
+The system implements a smart fallback logic: it first attempts extraction via Proxy (if configured), and if it fails or isn't set, it falls back to using the Cookies file.
 
 ---
 
@@ -177,11 +186,11 @@ POST /api/subtitles
 
 ### Parameters
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `videoUrl` | string | ✅ | YouTube video URL |
-| `lang` | string | ❌ | Subtitle language |
-| `type` | string | ❌ | `translate` or `summarize` |
+| Field      | Type   | Required | Description                |
+| ---------- | ------ | -------- | -------------------------- |
+| `videoUrl` | string | ✅       | YouTube video URL          |
+| `lang`     | string | ❌       | Subtitle language          |
+| `type`     | string | ❌       | `translate` or `summarize` |
 
 Default:
 
@@ -231,12 +240,12 @@ Adding a new AI provider only requires implementing the provider interface.
 
 Currently supported:
 
-| Provider | Supported |
-|---|---|
-| OpenAI | ✅ |
-| Google Gemini | ✅ |
-| OpenRouter | ✅ |
-| Custom Providers | 🔜 |
+| Provider         | Supported |
+| ---------------- | --------- |
+| OpenAI           | ✅        |
+| Google Gemini    | ✅        |
+| OpenRouter       | ✅        |
+| Custom Providers | 🔜        |
 
 ---
 
@@ -251,7 +260,6 @@ Benefits:
 - Faster responses
 - Lower AI API costs
 - Reduced processing time
-
 
 ## Concurrency Locking
 

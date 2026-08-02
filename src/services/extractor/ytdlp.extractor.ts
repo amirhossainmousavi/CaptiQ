@@ -17,12 +17,56 @@ export class YtDlpExtractor {
   private static readonly YT_DLP_PATH = process.env.YT_DLP_PATH || 'yt-dlp';
   private static readonly TIMEOUT = parseInt(process.env.YT_DLP_TIMEOUT_MS || '30000', 10);
 
-  private static getCommandFlags(): string {
+  private static buildCommand(subCommand: string, videoId: string, useProxy: boolean, useCookie: boolean): string {
     let flags = '--no-cache-dir --no-update';
-    const browser = process.env.YT_DLP_COOKIES_BROWSER || 'edge';
-    flags += ` --cookies-from-browser ${browser}`;
-    if (process.env.YT_DLP_PROXY) flags += ` --proxy "${process.env.YT_DLP_PROXY}"`;
-    return flags;
+    if (useProxy && process.env.YT_DLP_PROXY) {
+      flags += ` --proxy "${process.env.YT_DLP_PROXY}"`;
+    }
+    if (useCookie && process.env.YT_DLP_COOKIES_FILE) {
+      flags += ` --cookies "${process.env.YT_DLP_COOKIES_FILE}"`;
+    }
+    return `${this.YT_DLP_PATH} ${flags} ${subCommand} ${videoId}`;
+  }
+
+  private static async executeWithFallback(subCommand: string, videoId: string): Promise<string> {
+    const hasProxy = !!process.env.YT_DLP_PROXY;
+    const hasCookie = !!process.env.YT_DLP_COOKIES_FILE;
+
+    let lastError: any;
+
+    if (hasProxy) {
+      try {
+        const cmd = this.buildCommand(subCommand, videoId, true, false);
+        const { stdout } = await execAsync(cmd, { timeout: this.TIMEOUT });
+        return stdout;
+      } catch (err: any) {
+        lastError = err;
+      }
+    }
+
+    if (hasCookie) {
+      try {
+        const cmd = this.buildCommand(subCommand, videoId, false, true);
+        const { stdout } = await execAsync(cmd, { timeout: this.TIMEOUT });
+        return stdout;
+      } catch (err: any) {
+        lastError = err;
+      }
+    }
+
+    if (!hasProxy && !hasCookie) {
+      try {
+        const cmd = this.buildCommand(subCommand, videoId, false, false);
+        const { stdout } = await execAsync(cmd, { timeout: this.TIMEOUT });
+        return stdout;
+      } catch (err: any) {
+        lastError = err;
+      }
+    }
+
+    const err = new Error('Extraction failed. Please configure YT_DLP_PROXY or YT_DLP_COOKIES_FILE in .env environment variables.');
+    (err as any).statusCode = 429;
+    throw err;
   }
 
   static async getTranscript(videoUrl: string, lang = 'en'): Promise<SubtitleItem[]> {
@@ -35,14 +79,12 @@ export class YtDlpExtractor {
 
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'captiq-'));
     const outputTemplate = path.join(tmpDir, '%(id)s');
-    const flags = this.getCommandFlags();
 
     try {
-      const listCmd = `${this.YT_DLP_PATH} ${flags} --list-subs ${videoId}`;
-      const { stdout } = await execAsync(listCmd, { timeout: this.TIMEOUT });
+      const stdout = await this.executeWithFallback(`--list-subs`, videoId);
 
-      if (stdout.includes('Sign in to confirm')) {
-        const err = new Error('YouTube rate-limited or blocked. Please ensure your browser is logged into YouTube.');
+      if (stdout.includes('Sign in to confirm') || stdout.includes('429')) {
+        const err = new Error('YouTube rate-limited or blocked. Configure YT_DLP_PROXY or YT_DLP_COOKIES_FILE.');
         (err as any).statusCode = 429;
         throw err;
       }
@@ -61,8 +103,7 @@ export class YtDlpExtractor {
         throw err;
       }
 
-      const downloadCmd = `${this.YT_DLP_PATH} ${flags} --write-subs --sub-langs "${selectedTrack}" --skip-download --convert-subs vtt -o "${outputTemplate}" ${videoId}`;
-      await execAsync(downloadCmd, { timeout: this.TIMEOUT });
+      const downloadStdout = await this.executeWithFallback(`--write-subs --sub-langs "${selectedTrack}" --skip-download --convert-subs vtt -o "${outputTemplate}"`, videoId);
 
       const files = fs.readdirSync(tmpDir);
       const vttFile = files.find(f => f.endsWith('.vtt'));
